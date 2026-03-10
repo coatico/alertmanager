@@ -25,6 +25,7 @@ func TestDefaultConfigFilesOthers(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("XDG_CONFIG_HOME", "")
+	t.Setenv("XDG_CONFIG_DIRS", "")
 
 	files := defaultConfigFiles()
 
@@ -43,6 +44,34 @@ func TestDefaultConfigFilesOthers(t *testing.T) {
 	}
 
 	expectedSystem := "/etc/amtool/config.yml"
+	if files[1] != expectedSystem {
+		t.Errorf("expected system config path %q, got %q", expectedSystem, files[1])
+	}
+}
+
+func TestDefaultConfigFilesOthersWithXDGConfigDirs(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("XDG_CONFIG_HOME", "")
+	t.Setenv("XDG_CONFIG_DIRS", "/custom/config:/another/config")
+
+	files := defaultConfigFiles()
+
+	if len(files) != 2 {
+		t.Fatalf("expected 2 config file paths, got %d", len(files))
+	}
+
+	// os.UserConfigDir() on Unix returns $XDG_CONFIG_HOME if set, otherwise $HOME/.config.
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		userConfigDir = filepath.Join(home, ".config")
+	}
+	expectedUser := filepath.Join(userConfigDir, "amtool", "config.yml")
+	if files[0] != expectedUser {
+		t.Errorf("expected user config path %q, got %q", expectedUser, files[0])
+	}
+
+	expectedSystem := "/custom/config/amtool/config.yml"
 	if files[1] != expectedSystem {
 		t.Errorf("expected system config path %q, got %q", expectedSystem, files[1])
 	}
