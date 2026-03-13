@@ -25,8 +25,14 @@ func defaultConfigFiles() []string {
 	if err != nil {
 		userConfigDir = filepath.Join(os.ExpandEnv("$HOME"), ".config")
 	}
+	
+	systemConfigDir := "/etc"
+	if envConfigDir := os.Getenv("XDG_CONFIG_DIRS"); envConfigDir != "" {
+		systemConfigDir = filepath.SplitList(envConfigDir)[0]
+	}
+	
 	return []string{
 		filepath.Join(userConfigDir, "amtool", "config.yml"),
-		"/etc/amtool/config.yml",
+		filepath.Join(systemConfigDir, "amtool", "config.yml"),
 	}
 }
